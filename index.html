@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกสถิติการเข้าเรียน</title>
+
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts: Kanit & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-bg: #f5f7fb;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-color: #444;
+            --text-muted-color: #999;
+            --primary-color: #6a7ffb;
+            --gradient-blue: linear-gradient(135deg, #6BC4F3, #829AFB);
+            --gradient-red: linear-gradient(135deg, #F77373, #F8A28B);
+            --gradient-green: linear-gradient(135deg, #5EE2A0, #76E46A);
+            --gradient-purple: linear-gradient(135deg, #8782FB, #A573F7);
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            overflow-x: hidden; 
+        }
+
+        /* --- View Containers --- */
+        .view-container {
+            display: none; 
+        }
+        .view-container.active-view {
+            display: block;
+        }
+        .dashboard-layout.active-view {
+            display: flex;
+        }
+
+        /* --- Auth Pages (Login/Signup) --- */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            background-color: var(--card-bg);
+        }
+
+        /* --- Dashboard Layout --- */
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 90px;
+            background-color: var(--sidebar-bg);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.03);
+            flex-shrink: 0;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar .logo {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 3rem;
+        }
+        .sidebar .nav-link {
+            color: var(--text-muted-color);
+            font-size: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            width: 60px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .sidebar .nav-link.active, .sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: var(--primary-color);
+        }
+        .sidebar .nav-link .nav-text {
+            display: none;
+            margin-left: 1rem;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        @media (min-width: 992px) {
+            .sidebar:hover {
+                width: 250px;
+            }
+            .sidebar:hover .nav-link {
+                text-align: left;
+                width: 100%;
+                padding-left: 1.5rem;
+            }
+             .sidebar:hover .nav-text {
+                display: inline;
+                opacity: 1;
+            }
+        }
+
+
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-x: hidden;
+            min-width: 0;
+        }
+
+        /* --- Header --- */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+         .header .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* --- Widgets & Cards --- */
+        .widget-card {
+            background-color: var(--card-bg);
+            border: none;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+            height: 100%;
+        }
+
+        .stat-card {
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card.bg-gradient-green { background: var(--gradient-green); }
+        .stat-card.bg-gradient-red { background: var(--gradient-red); }
+        .stat-card.bg-gradient-blue { background: var(--gradient-blue); }
+        .stat-card.bg-gradient-purple { background: var(--gradient-purple); }
+
+        .stat-card .icon {
+            font-size: 1.5rem;
+            background-color: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .stat-card h3 {
+            font-weight: 700;
+        }
+        .stat-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .stat-card .bg-wave {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            font-size: 6rem;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+        
+        /* --- Report Page --- */
+        #report-paper {
+            font-family: 'Sarabun', sans-serif;
+        }
+        .report-table th, .report-table td {
+            vertical-align: middle;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .report-table thead th {
+            border-bottom-width: 2px;
+        }
+        .report-table .class-name-cell {
+            text-align: left;
+            padding-left: 1rem;
+        }
+
+        /* --- Print Styles --- */
+        @media print {
+            body {
+                background-color: #fff;
+                font-family: 'Sarabun', sans-serif;
+            }
+            .sidebar, .header, .toast, .modal, #print-button-container {
+                display: none !important;
+            }
+            .main-content {
+                padding: 0;
+            }
+            .widget-card {
+                box-shadow: none;
+                border: 1px solid #dee2e6;
+            }
+            .dashboard-layout {
+                display: block;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ======== 1. Signup View ======== -->
+    <div id="signup-view" class="view-container">
+        <div class="auth-container p-3">
+            <div class="card auth-card p-4">
+                <div class="card-body">
+                    <h3 class="text-center mb-4 fw-bold">สร้างบัญชีผู้ใช้ใหม่</h3>
+                    <form id="signup-form">
+                        <div class="mb-3">
+                            <label for="signup-name" class="form-label">ชื่อ-นามสกุล</label>
+                            <input type="text" class="form-control" id="signup-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signup-email" class="form-label">อีเมล</label>
+                            <input type="email" class="form-control" id="signup-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signup-password" class="form-label">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</label>
+                            <input type="password" class="form-control" id="signup-password" required>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary fw-bold">สมัครสมาชิก</button>
+                        </div>
+                    </form>
+                    <p class="text-center small mt-3">
+                        มีบัญชีอยู่แล้ว? <a href="#" id="goto-login">เข้าสู่ระบบที่นี่</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== 2. Login View ======== -->
+    <div id="login-view" class="view-container">
+        <div class="auth-container p-3">
+            <div class="card auth-card p-4">
+                <div class="card-body">
+                    <h3 class="text-center mb-4 fw-bold">ระบบบันทึกสถิติการเข้าเรียน</h3>
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">อีเมล</label>
+                            <input type="email" class="form-control" id="login-email" required placeholder="admin@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">รหัสผ่าน</label>
+                            <input type="password" class="form-control" id="login-password" required placeholder="••••••">
+                        </div>
+                        <div id="login-error" class="text-danger small my-2" style="display: none;"></div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary fw-bold">เข้าสู่ระบบ</button>
+                        </div>
+                    </form>
+                    <p class="text-center small mt-3">
+                        ยังไม่มีบัญชี? <a href="#" id="goto-signup">สร้างบัญชีใหม่</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======== 3. Dashboard View ======== -->
+    <div id="dashboard-view" class="view-container dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <a href="#" class="logo"><i class="bi bi-journal-check"></i></a>
+            <div class="flex-grow-1">
+                <a href="#" class="nav-link active" id="nav-dashboard" title="แดชบอร์ด"><i class="bi bi-grid-1x2-fill"></i><span class="nav-text">แดชบอร์ด</span></a>
+                <a href="#" class="nav-link" id="nav-attendance" title="บันทึกการเข้าเรียน"><i class="bi bi-pencil-square"></i><span class="nav-text">บันทึกข้อมูล</span></a>
+                <a href="#" class="nav-link" id="nav-report" title="รายงาน"><i class="bi bi-file-earmark-text-fill"></i><span class="nav-text">รายงาน</span></a>
+                <a href="#" class="nav-link admin-only" id="nav-users" title="จัดการผู้ใช้งาน"><i class="bi bi-people-fill"></i><span class="nav-text">ผู้ใช้งาน</span></a>
+                <a href="#" class="nav-link admin-only" id="nav-classrooms" title="จัดการห้องเรียน"><i class="bi bi-house-door-fill"></i><span class="nav-text">ห้องเรียน</span></a>
+                <a href="#" class="nav-link admin-only" id="nav-school" title="จัดการโรงเรียน"><i class="bi bi-building-fill-gear"></i><span class="nav-text">ตั้งค่าโรงเรียน</span></a>
+            </div>
+            <div>
+                 <a href="#" class="nav-link" id="nav-profile" title="ข้อมูลส่วนตัว"><i class="bi bi-person-circle"></i><span class="nav-text">โปรไฟล์</span></a>
+                 <a href="#" class="nav-link" id="logout-button" title="ออกจากระบบ"><i class="bi bi-box-arrow-right"></i><span class="nav-text">ออกจากระบบ</span></a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div>
+                    <h2 id="page-title" class="fw-bold mb-0">แดชบอร์ด</h2>
+                </div>
+                <div class="user-profile">
+                    <img id="user-avatar" src="https://i.pravatar.cc/150?u=default" alt="User">
+                    <span class="fw-bold" id="user-name-display">...</span>
+                </div>
+            </header>
+
+            <!-- Page Content Area -->
+            <div id="page-content-area">
+                <!-- Dashboard Content -->
+                <div id="dashboard-content" class="page">
+                    <div id="admin-dashboard-filter" class="row mb-4 admin-only" style="display: none;">
+                        <div class="col-md-4">
+                            <label for="dashboard-classroom-filter" class="form-label">กรองข้อมูลตามห้องเรียน</label>
+                            <select id="dashboard-classroom-filter" class="form-select"></select>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card bg-gradient-green">
+                                <div class="icon"><i class="bi bi-person-check-fill"></i></div>
+                                <h3 id="daily-present">0</h3>
+                                <p>มาเรียนวันนี้</p>
+                                <i class="bi bi-person-check bg-wave"></i>
+                            </div>
+                        </div>
+                         <div class="col-md-6 col-lg-3">
+                            <div class="stat-card bg-gradient-red">
+                                <div class="icon"><i class="bi bi-person-x-fill"></i></div>
+                                <h3 id="daily-absent">0</h3>
+                                <p>ขาดเรียนวันนี้</p>
+                                <i class="bi bi-person-x bg-wave"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card bg-gradient-blue">
+                                <div class="icon"><i class="bi bi-calendar-week"></i></div>
+                                <h3 id="weekly-present-percent">0%</h3>
+                                <p>มาเรียน (สัปดาห์นี้)</p>
+                                <i class="bi bi-graph-up bg-wave"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card bg-gradient-purple">
+                                <div class="icon"><i class="bi bi-mortarboard-fill"></i></div>
+                                <h3 id="term-present-percent">0%</h3>
+                                <p>มาเรียน (ภาพรวม)</p>
+                                <i class="bi bi-percent bg-wave"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mt-2">
+                        <div class="col-lg-12">
+                             <div class="widget-card">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">สรุปการเข้าเรียน (30 วันล่าสุด)</h5>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="today-attendance-table">
+                                        <thead><tr><th>วันที่</th><th>ห้องเรียน</th><th>มา</th><th>ขาด</th><th>รวม</th></tr></thead>
+                                        <tbody>
+                                            <tr><td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Content -->
+                <div id="attendance-content" class="page" style="display:none;">
+                    <div class="widget-card">
+                        <h5 class="mb-4">บันทึกข้อมูลการเข้าเรียน</h5>
+                        <div id="attendance-form-container">
+                             <div id="attendance-status-message" class="alert alert-info" style="display: none;"></div>
+                            <form id="attendance-form">
+                                <input type="hidden" id="existing-attendance-id">
+                                <div class="row g-3">
+                                    <div class="col-md-6 col-lg-4">
+                                        <label for="att-date" class="form-label">วันที่</label>
+                                        <input type="date" class="form-control" id="att-date" required>
+                                    </div>
+                                    <div class="col-md-6 col-lg-8">
+                                         <label class="form-label">ห้องเรียน</label>
+                                         <div id="att-classroom-admin-view">
+                                            <select id="att-classroom" class="form-select" required></select>
+                                         </div>
+                                         <div id="att-classroom-teacher-view" class="form-control-plaintext fs-5 fw-bold" style="display: none;"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="att-male-present" class="form-label">จำนวนชายที่มาเรียน</label>
+                                        <input type="number" id="att-male-present" class="form-control attendance-count-input" min="0" value="0" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="att-female-present" class="form-label">จำนวนหญิงที่มาเรียน</label>
+                                        <input type="number" id="att-female-present" class="form-control attendance-count-input" min="0" value="0" required>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <div class="p-3 bg-light rounded d-flex flex-wrap justify-content-around gap-3">
+                                            <div>ชายที่ขาด: <strong id="att-male-absent" class="text-danger fs-5">0</strong> คน</div>
+                                            <div>หญิงที่ขาด: <strong id="att-female-absent" class="text-danger fs-5">0</strong> คน</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-primary" id="attendance-submit-btn"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                         <div id="attendance-no-class-assigned" class="text-center p-5" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-1"></i>
+                            <h5 class="mt-3">คุณยังไม่ได้รับมอบหมายให้เป็นครูที่ปรึกษา</h5>
+                            <p class="text-muted">กรุณาติดต่อผู้ดูแลระบบเพื่อทำการมอบหมายห้องเรียน</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- START: Report Content -->
+                <div id="report-content" class="page" style="display:none;">
+                    <div class="widget-card">
+                        <div id="print-button-container" class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="col-md-4">
+                               <label for="report-date-filter" class="form-label">เลือกวันที่สำหรับรายงาน</label>
+                               <input type="date" id="report-date-filter" class="form-control">
+                            </div>
+                            <button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer-fill"></i> พิมพ์หน้านี้</button>
+                        </div>
+
+                        <div id="report-paper">
+                            <div class="text-center mb-3">
+                                <img id="report-logo" src="" alt="School Logo" style="height: 80px; display: none; margin-bottom: 0.5rem; margin-left: auto; margin-right: auto;">
+                                <h4 class="mb-1">บันทึกสถิติการมาเรียน</h4>
+                                <h5 id="report-school-name" class="mb-0">โรงเรียนตัวอย่าง</h5>
+                            </div>
+                            <p id="report-date-display" class="text-center mb-3">ประจำวันที่ ... เดือน ... พ.ศ. ...</p>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered report-table">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2">ชั้นเรียน</th>
+                                            <th colspan="3">นักเรียนเดิม</th>
+                                            <th colspan="3">มาเรียน</th>
+                                            <th colspan="3">ไม่มาเรียน</th>
+                                            <th rowspan="2">หมายเหตุ</th>
+                                        </tr>
+                                        <tr>
+                                            <th>ชาย</th><th>หญิง</th><th>รวม</th>
+                                            <th>ชาย</th><th>หญิง</th><th>รวม</th>
+                                            <th>ชาย</th><th>หญิง</th><th>รวม</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-table-body">
+                                        <!-- Report data is loaded here -->
+                                    </tbody>
+                                    <tfoot id="report-table-footer">
+                                        <!-- Summary row is loaded here -->
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                             <div class="mt-4">
+                                <strong>มาเรียนร้อยละ:</strong> <span id="report-percentage" class="fw-bold">...</span>
+                            </div>
+
+                            <div class="row mt-5">
+                                <div class="col-6"></div>
+                                <div class="col-6 text-center">
+                                    <p>ลงชื่อ .................................................. หัวหน้าครูเวร</p>
+                                    <p>(..................................................)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END: Report Content -->
+                
+                <!-- START: Classroom Management Content -->
+                <div id="classrooms-content" class="page" style="display:none;">
+                     <div class="row g-4">
+                        <div class="col-lg-5 col-xl-4">
+                            <div class="widget-card">
+                                <h5 class="mb-4">เพิ่มห้องเรียนใหม่</h5>
+                                <form id="classroom-form">
+                                    <div class="mb-3">
+                                        <label for="classroom-name" class="form-label">ชื่อห้องเรียน (เช่น ม.1/1)</label>
+                                        <input type="text" id="classroom-name" class="form-control" required>
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col">
+                                            <label for="classroom-male-students" class="form-label">นักเรียนชาย</label>
+                                            <input type="number" id="classroom-male-students" class="form-control" min="0" value="0" required>
+                                        </div>
+                                        <div class="col">
+                                            <label for="classroom-female-students" class="form-label">นักเรียนหญิง</label>
+                                            <input type="number" id="classroom-female-students" class="form-control" min="0" value="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> เพิ่มห้องเรียน</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 col-xl-8">
+                            <div class="widget-card">
+                                <h5 class="mb-4">รายชื่อห้องเรียนและครูที่ปรึกษา</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>ชื่อห้องเรียน</th>
+                                                <th class="text-center">นักเรียน (ช/ญ/รวม)</th>
+                                                <th>ครูที่ปรึกษา</th>
+                                                <th class="text-end">จัดการ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="classrooms-table-body">
+                                            <!-- Data is loaded here by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END: Classroom Management Content -->
+                
+                <!-- START: User Management Content -->
+                <div id="users-content" class="page" style="display:none;">
+                    <div class="widget-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">จัดการผู้ใช้งาน</h5>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="bi bi-person-plus-fill"></i> เพิ่มผู้ใช้ใหม่</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อ-นามสกุล</th>
+                                        <th>อีเมล</th>
+                                        <th>บทบาท (Role)</th>
+                                        <th class="text-end">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- User data loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- END: User Management Content -->
+
+                <!-- START: School Management Content -->
+                <div id="school-content" class="page" style="display:none;">
+                    <div class="widget-card">
+                        <h5 class="mb-4">ตั้งค่าข้อมูลโรงเรียน</h5>
+                        <form id="school-form">
+                            <div class="mb-3">
+                                <label for="school-name-input" class="form-label">ชื่อโรงเรียน</label>
+                                <input type="text" id="school-name-input" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="school-logo-url-input" class="form-label">URL โลโก้โรงเรียน</label>
+                                <input type="url" id="school-logo-url-input" class="form-control">
+                                <div class="form-text">ใส่ URL รูปภาพที่ถูกต้อง (เช่น https://example.com/logo.png)</div>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- END: School Management Content -->
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header text-white">
+                <i id="toast-icon" class="bi me-2"></i>
+                <strong class="me-auto" id="toast-title"></strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-body"></div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal fade confirm-modal" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-danger" id="confirmModalButton">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">เพิ่มผู้ใช้ใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-user-form">
+                        <div class="mb-3">
+                            <label for="new-user-name" class="form-label">ชื่อ-นามสกุล</label>
+                            <input type="text" class="form-control" id="new-user-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-user-email" class="form-label">อีเมล</label>
+                            <input type="email" class="form-control" id="new-user-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-user-password" class="form-label">ตั้งรหัสผ่านเริ่มต้น</label>
+                            <input type="password" class="form-control" id="new-user-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-user-role" class="form-label">บทบาท</label>
+                            <select id="new-user-role" class="form-select">
+                                <option value="teacher" selected>Teacher</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="new-user-classroom-container" style="display: none;">
+                            <label for="new-user-classroom" class="form-label">มอบหมายห้องเรียนที่ปรึกษา (ถ้ามี)</label>
+                            <select id="new-user-classroom" class="form-select">
+                                <!-- Classrooms loaded here -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" id="add-user-submit-btn">เพิ่มผู้ใช้</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Advisor Modal -->
+    <div class="modal fade" id="assignAdvisorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">มอบหมายครูที่ปรึกษา</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>เลือกครูที่ปรึกษาสำหรับห้อง <strong id="assign-advisor-classroom-name"></strong></p>
+                    <input type="hidden" id="assign-advisor-classroom-id">
+                    <select id="assign-advisor-teacher-select" class="form-select">
+                        <!-- Teacher list loaded here -->
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" id="assign-advisor-submit-btn">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Classroom Modal -->
+    <div class="modal fade" id="editClassroomModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">แก้ไขข้อมูลห้องเรียน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-classroom-form">
+                        <input type="hidden" id="edit-classroom-id">
+                        <div class="mb-3">
+                            <label for="edit-classroom-name" class="form-label">ชื่อห้องเรียน</label>
+                            <input type="text" id="edit-classroom-name" class="form-control" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col">
+                                <label for="edit-classroom-male-students" class="form-label">นักเรียนชาย</label>
+                                <input type="number" id="edit-classroom-male-students" class="form-control" min="0" required>
+                            </div>
+                            <div class="col">
+                                <label for="edit-classroom-female-students" class="form-label">นักเรียนหญิง</label>
+                                <input type="number" id="edit-classroom-female-students" class="form-control" min="0" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" id="edit-classroom-submit-btn">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // =================================================================
+        //  1. FIREBASE CONFIG & INITIALIZATION
+        // =================================================================
+        const firebaseConfig = {
+            apiKey: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            authDomain: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            projectId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            storageBucket: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            messagingSenderId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            appId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            measurementId: "" //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+        };
+
+        // Import Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword, 
+            signOut,
+            sendPasswordResetEmail,
+            updatePassword
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            setDoc,
+            getDoc, 
+            getDocs,
+            addDoc,
+            deleteDoc,
+            updateDoc,
+            query,
+            where,
+            Timestamp
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Initialize a secondary app for user creation to not interfere with admin's auth state
+        const secondaryApp = initializeApp(firebaseConfig, "user-creation-app");
+        const secondaryAuth = getAuth(secondaryApp);
+
+
+        // =================================================================
+        //  2. GLOBAL STATE & DOM REFERENCES
+        // =================================================================
+        let currentUser = null;
+        let currentUserRole = null;
+        let currentClassroomDetails = { maleStudents: 0, femaleStudents: 0 };
+        let existingAttendanceDocId = null;
+        const toastEl = document.getElementById('liveToast');
+        const bsToast = new bootstrap.Toast(toastEl);
+        const confirmModalEl = document.getElementById('confirmModal');
+        const bsConfirmModal = new bootstrap.Modal(confirmModalEl);
+        const addUserModalEl = document.getElementById('addUserModal');
+        const bsAddUserModal = new bootstrap.Modal(addUserModalEl);
+        const assignAdvisorModalEl = document.getElementById('assignAdvisorModal');
+        const bsAssignAdvisorModal = new bootstrap.Modal(assignAdvisorModalEl);
+        const editClassroomModalEl = document.getElementById('editClassroomModal');
+        const bsEditClassroomModal = new bootstrap.Modal(editClassroomModalEl);
+        let confirmCallback = null;
+
+        // =================================================================
+        //  3. HELPER & UI FUNCTIONS
+        // =================================================================
+        
+        function showToast(title, message, type = 'success') {
+            const toastHeader = toastEl.querySelector('.toast-header');
+            const toastIcon = document.getElementById('toast-icon');
+            toastHeader.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+            
+            if (type === 'success') {
+                toastHeader.classList.add('bg-success');
+                toastIcon.className = 'bi bi-check-circle-fill';
+            } else if (type === 'error') {
+                toastHeader.classList.add('bg-danger');
+                toastIcon.className = 'bi bi-x-circle-fill';
+            } else { // warning
+                toastHeader.classList.add('bg-warning');
+                toastIcon.className = 'bi bi-exclamation-triangle-fill';
+            }
+            
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-body').innerText = message;
+            bsToast.show();
+        }
+
+        function showConfirm(title, body, callback) {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalBody').innerText = body;
+            confirmCallback = callback;
+            bsConfirmModal.show();
+        }
+        document.getElementById('confirmModalButton').addEventListener('click', () => {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            bsConfirmModal.hide();
+        });
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+            
+            document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+            const navLink = document.getElementById(`nav-${pageId.replace('-content', '')}`);
+            if(navLink) navLink.classList.add('active');
+
+            const pageTitles = {
+                'dashboard-content': 'แดชบอร์ด',
+                'attendance-content': 'บันทึกการเข้าเรียน',
+                'report-content': 'พิมพ์รายงานประจำวัน',
+                'users-content': 'จัดการผู้ใช้งาน',
+                'classrooms-content': 'จัดการห้องเรียน',
+                'school-content': 'ตั้งค่าโรงเรียน',
+                'profile-content': 'ข้อมูลส่วนตัว'
+            };
+            document.getElementById('page-title').innerText = pageTitles[pageId] || 'Dashboard';
+        }
+        
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // =================================================================
+        //  4. AUTHENTICATION LOGIC
+        // =================================================================
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    currentUserRole = userData.role;
+                    document.getElementById('user-name-display').textContent = userData.name || user.email;
+                } else {
+                    currentUserRole = 'teacher';
+                    document.getElementById('user-name-display').textContent = user.email;
+                }
+                
+                document.getElementById('user-avatar').src = `https://i.pravatar.cc/150?u=${user.uid}`;
+                
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = currentUserRole === 'admin' ? 'block' : 'none';
+                });
+                
+                if (currentUserRole === 'admin') {
+                    populateDashboardFilter();
+                }
+
+                showView('dashboard-view');
+                showPage('dashboard-content');
+                loadDashboardData();
+            } else {
+                currentUser = null;
+                currentUserRole = null;
+                showView('login-view');
+            }
+        });
+
+        // --- Form Handlers ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.style.display = 'none';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                errorEl.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                errorEl.style.display = 'block';
+            }
+        });
+
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            if(!name){
+                showToast('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อ-นามสกุล', 'warning');
+                return;
+            }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, "users", userCredential.user.uid), {
+                    name: name,
+                    email: email,
+                    role: 'teacher',
+                    createdAt: Timestamp.now()
+                });
+                showToast('สำเร็จ', 'สร้างบัญชีเรียบร้อยแล้ว');
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาด', error.message, 'error');
+            }
+        });
+        
+        document.getElementById('logout-button').addEventListener('click', () => {
+             showConfirm('ออกจากระบบ', 'คุณต้องการออกจากระบบใช่หรือไม่?', () => {
+                signOut(auth);
+                showToast('สำเร็จ', 'ออกจากระบบเรียบร้อยแล้ว');
+            });
+        });
+        
+        // --- Page Navigation ---
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = link.id.replace('nav-', '') + '-content';
+                if(document.getElementById(pageId)) {
+                    showPage(pageId);
+                    if(pageId === 'dashboard-content') loadDashboardData();
+                    if(pageId === 'attendance-content') loadAttendancePage();
+                    if(pageId === 'report-content') loadReportPage();
+                    if(pageId === 'classrooms-content') loadClassroomsList();
+                    if(pageId === 'users-content') loadUsersList();
+                    if(pageId === 'school-content') loadSchoolSettingsPage();
+                }
+            });
+        });
+        
+        document.getElementById('goto-login').addEventListener('click', (e) => { e.preventDefault(); showView('login-view'); });
+        document.getElementById('goto-signup').addEventListener('click', (e) => { e.preventDefault(); showView('signup-view'); });
+
+        // =================================================================
+        //  5. FEATURE-SPECIFIC LOGIC
+        // =================================================================
+
+        async function loadDashboardData(filterClassroom = 'all') {
+            const allAttendanceSnapshot = await getDocs(collection(db, "Attendance"));
+            
+            let assignedClass = null;
+            if (currentUserRole === 'teacher') {
+                const q = query(collection(db, "classrooms"), where("advisorId", "==", currentUser.uid));
+                const classroomSnapshot = await getDocs(q);
+                if (!classroomSnapshot.empty) {
+                    assignedClass = classroomSnapshot.docs[0].data().name;
+                }
+            }
+
+            let filteredDocs = allAttendanceSnapshot.docs.filter(doc => {
+                const data = doc.data();
+                if (currentUserRole === 'admin' && filterClassroom !== 'all' && data.classroom !== filterClassroom) return false;
+                if (currentUserRole === 'teacher' && data.classroom !== assignedClass) return false;
+                return true;
+            });
+
+            // --- Process data for Dashboard Cards ---
+            const todayStr = getTodayString();
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // Sunday - 0, Saturday - 6
+            const firstDayOfWeek = new Date(today);
+            firstDayOfWeek.setDate(today.getDate() - dayOfWeek);
+            firstDayOfWeek.setHours(0,0,0,0);
+
+            let presentCount = 0;
+            let absentCount = 0;
+            let weeklyPresent = 0;
+            let weeklyTotal = 0;
+            let termPresent = 0;
+            let termTotal = 0;
+            
+            filteredDocs.forEach(doc => {
+                const data = doc.data();
+                const docDate = data.date.toDate();
+                
+                const present = (data.presentMale || 0) + (data.presentFemale || 0);
+                const total = (data.totalMale || 0) + (data.totalFemale || 0);
+
+                // Today's stats
+                if (docDate.toISOString().split('T')[0] === todayStr) {
+                    presentCount += present;
+                    absentCount += (data.absentMale || 0) + (data.absentFemale || 0);
+                }
+
+                // Weekly stats
+                if (docDate >= firstDayOfWeek) {
+                    weeklyPresent += present;
+                    weeklyTotal += total;
+                }
+
+                // Term stats
+                termPresent += present;
+                termTotal += total;
+            });
+            document.getElementById('daily-present').textContent = presentCount;
+            document.getElementById('daily-absent').textContent = absentCount;
+            document.getElementById('weekly-present-percent').textContent = `${weeklyTotal > 0 ? ((weeklyPresent / weeklyTotal) * 100).toFixed(0) : 0}%`;
+            document.getElementById('term-present-percent').textContent = `${termTotal > 0 ? ((termPresent / termTotal) * 100).toFixed(0) : 0}%`;
+
+
+            // --- Process data for the summary table (last 30 days) ---
+            const tableBody = document.getElementById('today-attendance-table').querySelector('tbody');
+            tableBody.innerHTML = '';
+
+            filteredDocs.sort((a, b) => b.data().date.toMillis() - a.data().date.toMillis());
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const last30DaysDocs = filteredDocs.filter(doc => doc.data().date.toDate() >= thirtyDaysAgo);
+
+            if (last30DaysDocs.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">ไม่พบข้อมูลการเข้าเรียนในช่วง 30 วันที่ผ่านมา</td></tr>';
+            } else {
+                last30DaysDocs.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.date.toDate();
+                    const formattedDate = date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const present = (data.presentMale || 0) + (data.presentFemale || 0);
+                    const absent = (data.absentMale || 0) + (data.absentFemale || 0);
+                    const total = (data.totalMale || 0) + (data.totalFemale || 0);
+
+                    const row = `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${data.classroom}</td>
+                            <td>${present}</td>
+                            <td>${absent}</td>
+                            <td><strong>${total}</strong></td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            }
+        }
+        
+        async function populateDashboardFilter() {
+            const filterSelect = document.getElementById('dashboard-classroom-filter');
+            if (!filterSelect) return;
+            filterSelect.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
+            const classrooms = await getDocs(collection(db, "classrooms"));
+            classrooms.forEach(doc => {
+                filterSelect.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`;
+            });
+            filterSelect.addEventListener('change', (e) => {
+                loadDashboardData(e.target.value);
+            });
+        }
+        
+        async function loadClassroomsToSelect(selectId) {
+            const selectEl = document.getElementById(selectId);
+            selectEl.innerHTML = '<option>กำลังโหลด...</option>';
+            const querySnapshot = await getDocs(collection(db, "classrooms"));
+            selectEl.innerHTML = '<option value="" selected disabled>-- กรุณาเลือกห้องเรียน --</option>';
+            querySnapshot.forEach((doc) => {
+                selectEl.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`;
+            });
+        }
+
+        async function loadAttendancePage() {
+            document.getElementById('att-date').value = getTodayString();
+            const formContainer = document.getElementById('attendance-form-container');
+            const noClassAssignedView = document.getElementById('attendance-no-class-assigned');
+            const classroomSelect = document.getElementById('att-classroom');
+            const adminView = document.getElementById('att-classroom-admin-view');
+            const teacherView = document.getElementById('att-classroom-teacher-view');
+
+            if (currentUserRole === 'admin') {
+                formContainer.style.display = 'block';
+                noClassAssignedView.style.display = 'none';
+                adminView.style.display = 'block';
+                teacherView.style.display = 'none';
+                classroomSelect.required = true;
+                await loadClassroomsToSelect('att-classroom');
+                checkExistingAttendance();
+            } else { // Teacher
+                const q = query(collection(db, "classrooms"), where("advisorId", "==", currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    formContainer.style.display = 'none';
+                    noClassAssignedView.style.display = 'block';
+                } else if (querySnapshot.size === 1) {
+                    formContainer.style.display = 'block';
+                    noClassAssignedView.style.display = 'none';
+                    adminView.style.display = 'none';
+                    teacherView.style.display = 'block';
+                    classroomSelect.required = false;
+
+                    const classroomDoc = querySnapshot.docs[0];
+                    const classroomData = classroomDoc.data();
+                    teacherView.textContent = classroomData.name;
+                    currentClassroomDetails = {
+                        maleStudents: classroomData.maleStudents || 0,
+                        femaleStudents: classroomData.femaleStudents || 0
+                    };
+                    checkExistingAttendance();
+                } else { // Teacher with multiple classes
+                    formContainer.style.display = 'block';
+                    noClassAssignedView.style.display = 'none';
+                    adminView.style.display = 'block';
+                    teacherView.style.display = 'none';
+                    classroomSelect.required = true;
+                    
+                    classroomSelect.innerHTML = '<option value="" selected disabled>-- กรุณาเลือกห้องเรียน --</option>';
+                    querySnapshot.forEach(doc => {
+                        classroomSelect.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`;
+                    });
+                    checkExistingAttendance();
+                }
+            }
+        }
+
+        async function checkExistingAttendance() {
+            const dateStr = document.getElementById('att-date').value;
+            let classroomName;
+            
+            const adminView = document.getElementById('att-classroom-admin-view');
+            if (window.getComputedStyle(adminView).display !== 'none') {
+                classroomName = document.getElementById('att-classroom').value;
+            } else {
+                classroomName = document.getElementById('att-classroom-teacher-view').textContent;
+            }
+
+            const statusMessage = document.getElementById('attendance-status-message');
+            const submitBtn = document.getElementById('attendance-submit-btn');
+            
+            if (!dateStr || !classroomName) {
+                existingAttendanceDocId = null;
+                return;
+            }
+
+            const startOfDay = Timestamp.fromDate(new Date(dateStr + "T00:00:00"));
+            const endOfDay = Timestamp.fromDate(new Date(dateStr + "T23:59:59"));
+            
+            const q = query(collection(db, "Attendance"), 
+                where("date", ">=", startOfDay), 
+                where("date", "<=", endOfDay)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const docSnap = querySnapshot.docs.find(doc => doc.data().classroom === classroomName);
+
+            if (docSnap) {
+                const data = docSnap.data();
+                existingAttendanceDocId = docSnap.id;
+
+                document.getElementById('att-male-present').value = data.presentMale || 0;
+                document.getElementById('att-female-present').value = data.presentFemale || 0;
+                
+                statusMessage.textContent = 'ข้อมูลสำหรับวันนี้ถูกบันทึกแล้ว คุณสามารถแก้ไขและอัปเดตได้';
+                statusMessage.style.display = 'block';
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> อัปเดตข้อมูล';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
+            } else {
+                existingAttendanceDocId = null;
+                document.getElementById('att-male-present').value = 0;
+                document.getElementById('att-female-present').value = 0;
+                statusMessage.style.display = 'none';
+                submitBtn.innerHTML = '<i class="bi bi-save"></i> บันทึกข้อมูล';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+            }
+            updateAbsentCount();
+        }
+
+        function updateAbsentCount() {
+            const presentMale = parseInt(document.getElementById('att-male-present').value, 10) || 0;
+            const presentFemale = parseInt(document.getElementById('att-female-present').value, 10) || 0;
+
+            const absentMale = currentClassroomDetails.maleStudents - presentMale;
+            const absentFemale = currentClassroomDetails.femaleStudents - presentFemale;
+
+            document.getElementById('att-male-absent').textContent = absentMale >= 0 ? absentMale : 0;
+            document.getElementById('att-female-absent').textContent = absentFemale >= 0 ? absentFemale : 0;
+        }
+
+        document.getElementById('att-date').addEventListener('change', checkExistingAttendance);
+        document.getElementById('att-classroom').addEventListener('change', async () => {
+            const classroomName = document.getElementById('att-classroom').value;
+            if (!classroomName) {
+                currentClassroomDetails = { maleStudents: 0, femaleStudents: 0 };
+                updateAbsentCount();
+                return;
+            }
+            const q = query(collection(db, "classrooms"), where("name", "==", classroomName));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                currentClassroomDetails = querySnapshot.docs[0].data();
+            }
+            await checkExistingAttendance();
+        });
+        document.querySelectorAll('.attendance-count-input').forEach(input => {
+            input.addEventListener('input', updateAbsentCount);
+        });
+
+        document.getElementById('attendance-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const dateVal = document.getElementById('att-date').value;
+            let classroomVal;
+            
+            const adminView = document.getElementById('att-classroom-admin-view');
+            if (window.getComputedStyle(adminView).display !== 'none') {
+                 classroomVal = document.getElementById('att-classroom').value;
+            } else {
+                classroomVal = document.getElementById('att-classroom-teacher-view').textContent;
+            }
+
+            const presentMale = parseInt(document.getElementById('att-male-present').value, 10) || 0;
+            const presentFemale = parseInt(document.getElementById('att-female-present').value, 10) || 0;
+
+            if(!classroomVal){
+                showToast('ข้อมูลไม่ครบ', 'กรุณาเลือกห้องเรียน', 'warning');
+                return;
+            }
+
+            const absentMale = currentClassroomDetails.maleStudents - presentMale;
+            const absentFemale = currentClassroomDetails.femaleStudents - presentFemale;
+
+            if (absentMale < 0 || absentFemale < 0) {
+                showToast('ข้อมูลผิดพลาด', 'จำนวนนักเรียนที่มาเรียนมากกว่าจำนวนนักเรียนทั้งหมด', 'error');
+                return;
+            }
+            
+            const dataToSave = {
+                date: Timestamp.fromDate(new Date(dateVal)),
+                classroom: classroomVal,
+                presentMale, presentFemale,
+                absentMale, absentFemale,
+                totalMale: currentClassroomDetails.maleStudents,
+                totalFemale: currentClassroomDetails.femaleStudents,
+                recordedBy: currentUser.email,
+                recordedAt: Timestamp.now()
+            };
+
+            try {
+                if (existingAttendanceDocId) {
+                    await updateDoc(doc(db, "Attendance", existingAttendanceDocId), dataToSave);
+                    showToast('สำเร็จ', 'อัปเดตข้อมูลการเข้าเรียนเรียบร้อย');
+                } else {
+                    await addDoc(collection(db, "Attendance"), dataToSave);
+                    showToast('สำเร็จ', 'บันทึกข้อมูลการเข้าเรียนเรียบร้อย');
+                }
+                loadAttendancePage(); // Refresh the page state
+            } catch (error) {
+                showToast('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message, 'error');
+            }
+        });
+        
+        async function loadClassroomsList() {
+            const classroomsTableBody = document.getElementById('classrooms-table-body');
+            classroomsTableBody.innerHTML = '<tr><td colspan="4" class="text-center">กำลังโหลด...</td></tr>';
+            const querySnapshot = await getDocs(collection(db, "classrooms"));
+            classroomsTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                classroomsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีห้องเรียนในระบบ</td></tr>';
+                return;
+            }
+            
+            querySnapshot.forEach((docSnap) => {
+                const classroom = docSnap.data();
+                const maleStudents = classroom.maleStudents || 0;
+                const femaleStudents = classroom.femaleStudents || 0;
+                const totalStudents = maleStudents + femaleStudents;
+
+                const row = `
+                    <tr>
+                        <td><strong>${classroom.name}</strong></td>
+                        <td class="text-center">${maleStudents}/${femaleStudents}/${totalStudents}</td>
+                        <td>${classroom.advisorName || '<span class="text-muted">ยังไม่ได้มอบหมาย</span>'}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary assign-advisor-btn" data-classroomid="${docSnap.id}" data-classroomname="${classroom.name}">
+                                <i class="bi bi-person-check-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning edit-classroom-btn" data-classroomid="${docSnap.id}">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-classroom-btn" data-classroomid="${docSnap.id}" data-classroomname="${classroom.name}">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                classroomsTableBody.innerHTML += row;
+            });
+        }
+        
+        const classroomForm = document.getElementById('classroom-form');
+        classroomForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const classroomNameInput = document.getElementById('classroom-name');
+            const maleStudentsInput = document.getElementById('classroom-male-students');
+            const femaleStudentsInput = document.getElementById('classroom-female-students');
+
+            const classroomName = classroomNameInput.value.trim();
+            const maleStudents = parseInt(maleStudentsInput.value, 10);
+            const femaleStudents = parseInt(femaleStudentsInput.value, 10);
+
+            if (!classroomName) {
+                showToast('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกชื่อห้องเรียน', 'warning');
+                return;
+            }
+            try {
+                await addDoc(collection(db, "classrooms"), { 
+                    name: classroomName,
+                    maleStudents: maleStudents,
+                    femaleStudents: femaleStudents
+                });
+                showToast('สำเร็จ', `เพิ่มห้องเรียน "${classroomName}" เรียบร้อยแล้ว`);
+                classroomForm.reset();
+                loadClassroomsList();
+            } catch (error) {
+                showToast('ผิดพลาด', 'ไม่สามารถเพิ่มห้องเรียนได้: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('classrooms-table-body').addEventListener('click', async (e) => {
+            const assignBtn = e.target.closest('.assign-advisor-btn');
+            const editBtn = e.target.closest('.edit-classroom-btn');
+            const deleteBtn = e.target.closest('.delete-classroom-btn');
+
+            if (assignBtn) {
+                const classroomId = assignBtn.dataset.classroomid;
+                const classroomName = assignBtn.dataset.classroomname;
+                
+                document.getElementById('assign-advisor-classroom-id').value = classroomId;
+                document.getElementById('assign-advisor-classroom-name').textContent = classroomName;
+
+                const teacherSelect = document.getElementById('assign-advisor-teacher-select');
+                teacherSelect.innerHTML = '<option>กำลังโหลดรายชื่อครู...</option>';
+
+                const q = query(collection(db, "users"), where("role", "==", "teacher"));
+                const teachersSnapshot = await getDocs(q);
+                
+                teacherSelect.innerHTML = '<option value="">-- ไม่มอบหมาย --</option>';
+                teachersSnapshot.forEach(doc => {
+                    const teacherData = doc.data();
+                    teacherSelect.innerHTML += `<option value="${doc.id}|${teacherData.email}|${teacherData.name}">${teacherData.name} (${teacherData.email})</option>`;
+                });
+                
+                bsAssignAdvisorModal.show();
+            }
+
+            if (editBtn) {
+                const classroomId = editBtn.dataset.classroomid;
+                const docRef = doc(db, "classrooms", classroomId);
+                const docSnap = await getDoc(docRef);
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('edit-classroom-id').value = docSnap.id;
+                    document.getElementById('edit-classroom-name').value = data.name;
+                    document.getElementById('edit-classroom-male-students').value = data.maleStudents || 0;
+                    document.getElementById('edit-classroom-female-students').value = data.femaleStudents || 0;
+                    bsEditClassroomModal.show();
+                }
+            }
+
+            if (deleteBtn) {
+                const classroomId = deleteBtn.dataset.classroomid;
+                const classroomName = deleteBtn.dataset.classroomname;
+                showConfirm('ยืนยันการลบ', `คุณต้องการลบห้องเรียน "${classroomName}" ใช่หรือไม่?`, async () => {
+                    try {
+                        await deleteDoc(doc(db, "classrooms", classroomId));
+                        showToast('สำเร็จ', `ลบห้องเรียน "${classroomName}" เรียบร้อยแล้ว`);
+                        loadClassroomsList();
+                    } catch (error) {
+                        showToast('ผิดพลาด', 'ไม่สามารถลบห้องเรียนได้', 'error');
+                    }
+                });
+            }
+        });
+
+        document.getElementById('assign-advisor-submit-btn').addEventListener('click', async () => {
+            const classroomId = document.getElementById('assign-advisor-classroom-id').value;
+            const selectedTeacher = document.getElementById('assign-advisor-teacher-select').value;
+            
+            let advisorId = null;
+            let advisorEmail = null;
+            let advisorName = null;
+
+            if (selectedTeacher) {
+                [advisorId, advisorEmail, advisorName] = selectedTeacher.split('|');
+            }
+
+            const classroomDocRef = doc(db, "classrooms", classroomId);
+            try {
+                await updateDoc(classroomDocRef, { advisorId, advisorEmail, advisorName });
+                showToast('สำเร็จ', 'มอบหมายครูที่ปรึกษาเรียบร้อยแล้ว');
+                bsAssignAdvisorModal.hide();
+                loadClassroomsList();
+            } catch (error) {
+                showToast('ผิดพลาด', 'ไม่สามารถมอบหมายได้', 'error');
+            }
+        });
+        
+        document.getElementById('edit-classroom-submit-btn').addEventListener('click', async () => {
+            const classroomId = document.getElementById('edit-classroom-id').value;
+            const classroomName = document.getElementById('edit-classroom-name').value;
+            const maleStudents = parseInt(document.getElementById('edit-classroom-male-students').value, 10);
+            const femaleStudents = parseInt(document.getElementById('edit-classroom-female-students').value, 10);
+
+            if (!classroomName) {
+                showToast('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกชื่อห้องเรียน', 'warning');
+                return;
+            }
+
+            const classroomDocRef = doc(db, "classrooms", classroomId);
+            try {
+                await updateDoc(classroomDocRef, {
+                    name: classroomName,
+                    maleStudents: maleStudents,
+                    femaleStudents: femaleStudents
+                });
+                showToast('สำเร็จ', 'อัปเดตข้อมูลห้องเรียนเรียบร้อยแล้ว');
+                bsEditClassroomModal.hide();
+                loadClassroomsList();
+            } catch(error) {
+                showToast('ผิดพลาด', 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
+            }
+        });
+
+        const usersTableBody = document.getElementById('users-table-body');
+
+        async function loadUsersList() {
+            usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center">กำลังโหลด...</td></tr>';
+            const querySnapshot = await getDocs(collection(db, "users"));
+            usersTableBody.innerHTML = '';
+            if (querySnapshot.empty) {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ไม่พบผู้ใช้งาน</td></tr>';
+                return;
+            }
+
+            querySnapshot.forEach(docSnap => {
+                const user = docSnap.data();
+                const userDocId = docSnap.id;
+                const isCurrentUser = currentUser.uid === userDocId;
+                
+                const row = `
+                    <tr>
+                        <td>${user.name || '<span class="text-muted">ไม่มีชื่อ</span>'}</td>
+                        <td>${user.email} ${isCurrentUser ? '<span class="badge bg-success ms-2">คุณ</span>' : ''}</td>
+                        <td>
+                            <select class="form-select form-select-sm role-select" data-userid="${userDocId}" ${isCurrentUser ? 'disabled' : ''}>
+                                <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>Teacher</option>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary reset-password-btn" data-email="${user.email}" ${isCurrentUser ? 'disabled' : ''}>
+                                <i class="bi bi-key-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-user-btn" data-userid="${userDocId}" data-email="${user.email}" ${isCurrentUser ? 'disabled' : ''}>
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                usersTableBody.innerHTML += row;
+            });
+        }
+
+        usersTableBody.addEventListener('click', (e) => {
+            const resetBtn = e.target.closest('.reset-password-btn');
+            const deleteBtn = e.target.closest('.delete-user-btn');
+
+            if (resetBtn) {
+                const email = resetBtn.dataset.email;
+                showConfirm('รีเซ็ตรหัสผ่าน', `คุณต้องการส่งอีเมลรีเซ็ตรหัสผ่านไปยัง ${email} ใช่หรือไม่?`, () => {
+                    sendPasswordResetEmail(auth, email)
+                        .then(() => {
+                            showToast('สำเร็จ', `ส่งอีเมลรีเซ็ตรหัสผ่านไปยัง ${email} แล้ว`);
+                        })
+                        .catch((error) => {
+                            showToast('ผิดพลาด', error.message, 'error');
+                        });
+                });
+            }
+
+            if (deleteBtn) {
+                const userId = deleteBtn.dataset.userid;
+                const email = deleteBtn.dataset.email;
+                showConfirm('ยืนยันการลบผู้ใช้', `คุณต้องการลบข้อมูลผู้ใช้ ${email} ใช่หรือไม่? (หมายเหตุ: การกระทำนี้จะลบข้อมูลออกจากฐานข้อมูล แต่บัญชีสำหรับเข้าระบบจะยังคงอยู่)`, async () => {
+                    try {
+                        await deleteDoc(doc(db, "users", userId));
+                        showToast('สำเร็จ', `ลบข้อมูลผู้ใช้ ${email} เรียบร้อยแล้ว`);
+                        loadUsersList();
+                    } catch (error) {
+                        showToast('ผิดพลาด', 'ไม่สามารถลบข้อมูลผู้ใช้ได้', 'error');
+                    }
+                });
+            }
+        });
+
+        usersTableBody.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('role-select')) {
+                const selectedRole = e.target.value;
+                const userIdToUpdate = e.target.dataset.userid;
+                
+                showConfirm('ยืนยันการเปลี่ยนบทบาท', `คุณต้องการเปลี่ยนบทบาทของผู้ใช้นี้เป็น "${selectedRole}" ใช่หรือไม่?`, async () => {
+                    const userDocRef = doc(db, "users", userIdToUpdate);
+                    try {
+                        await updateDoc(userDocRef, { role: selectedRole });
+                        showToast('สำเร็จ', 'อัปเดตบทบาทผู้ใช้เรียบร้อยแล้ว');
+                        loadUsersList();
+                    } catch (error) {
+                        showToast('ผิดพลาด', 'ไม่สามารถอัปเดตบทบาทได้', 'error');
+                        loadUsersList();
+                    }
+                });
+            }
+        });
+
+        document.getElementById('add-user-submit-btn').addEventListener('click', async () => {
+            const form = document.getElementById('add-user-form');
+            const name = document.getElementById('new-user-name').value;
+            const email = document.getElementById('new-user-email').value;
+            const password = document.getElementById('new-user-password').value;
+            const role = document.getElementById('new-user-role').value;
+            const classroomId = document.getElementById('new-user-classroom').value;
+
+            if (!name || !email || password.length < 6) {
+                showToast('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อ, อีเมล และรหัสผ่านอย่างน้อย 6 ตัวอักษร', 'warning');
+                return;
+            }
+
+            try {
+                // Check if user already exists in Firestore
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const existingUserSnapshot = await getDocs(q);
+                if (!existingUserSnapshot.empty) {
+                    showToast('ผิดพลาด', 'อีเมลนี้มีผู้ใช้งานในระบบแล้ว', 'error');
+                    return;
+                }
+
+                const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                const newUser = userCredential.user;
+                
+                await setDoc(doc(db, "users", newUser.uid), {
+                    name: name,
+                    email: newUser.email,
+                    role: role,
+                    createdAt: Timestamp.now()
+                });
+
+                if (role === 'teacher' && classroomId) {
+                    const classroomDocRef = doc(db, "classrooms", classroomId);
+                    await updateDoc(classroomDocRef, {
+                        advisorId: newUser.uid,
+                        advisorEmail: newUser.email,
+                        advisorName: name
+                    });
+                }
+
+                showToast('สำเร็จ', `สร้างบัญชีผู้ใช้ ${name} เรียบร้อยแล้ว`);
+                form.reset();
+                bsAddUserModal.hide();
+                loadUsersList();
+                loadClassroomsList(); // Refresh classrooms to show new advisor
+            } catch (error) {
+                 showToast('ผิดพลาด', error.message, 'error');
+            }
+        });
+        
+        addUserModalEl.addEventListener('show.bs.modal', async () => {
+            const roleSelect = document.getElementById('new-user-role');
+            const classroomContainer = document.getElementById('new-user-classroom-container');
+            const classroomSelect = document.getElementById('new-user-classroom');
+
+            const toggleClassroomSelect = () => {
+                classroomContainer.style.display = roleSelect.value === 'teacher' ? 'block' : 'none';
+            };
+
+            roleSelect.addEventListener('change', toggleClassroomSelect);
+            toggleClassroomSelect(); // Initial check
+
+            classroomSelect.innerHTML = '<option value="">-- ไม่มอบหมาย --</option>';
+            const q = query(collection(db, "classrooms"), where("advisorId", "==", null));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach(doc => {
+                 classroomSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+            });
+        });
+
+        addUserModalEl.addEventListener('hide.bs.modal', () => {
+            document.getElementById('add-user-form').reset();
+            const focusedElement = document.activeElement;
+            if (addUserModalEl.contains(focusedElement)) {
+                focusedElement.blur();
+            }
+        });
+        
+        assignAdvisorModalEl.addEventListener('hide.bs.modal', () => {
+            const focusedElement = document.activeElement;
+            if (assignAdvisorModalEl.contains(focusedElement)) {
+                focusedElement.blur();
+            }
+        });
+
+        // --- START: Report Page Logic ---
+        async function loadReportPage() {
+            const reportDateInput = document.getElementById('report-date-filter');
+            reportDateInput.value = getTodayString();
+            await generateReport(reportDateInput.value);
+
+            reportDateInput.addEventListener('change', () => {
+                generateReport(reportDateInput.value);
+            });
+        }
+
+        async function generateReport(dateStr) {
+            const date = new Date(dateStr);
+            const dateDisplay = document.getElementById('report-date-display');
+            dateDisplay.textContent = `ประจำวันที่ ${date.getDate()} เดือน ${date.toLocaleString('th-TH', { month: 'long' })} พ.ศ. ${date.getFullYear() + 543}`;
+
+            const reportBody = document.getElementById('report-table-body');
+            const reportFooter = document.getElementById('report-table-footer');
+            const reportPercentage = document.getElementById('report-percentage');
+            const reportSchoolName = document.getElementById('report-school-name');
+            const reportLogo = document.getElementById('report-logo');
+
+            reportBody.innerHTML = '<tr><td colspan="11" class="text-center">กำลังโหลดข้อมูล...</td></tr>';
+            
+            // Fetch school settings
+            const schoolSettingsDoc = await getDoc(doc(db, "settings", "school-profile"));
+            if (schoolSettingsDoc.exists()) {
+                const settings = schoolSettingsDoc.data();
+                reportSchoolName.textContent = settings.name || 'โรงเรียนตัวอย่าง';
+                if (settings.logoUrl) {
+                    reportLogo.src = settings.logoUrl;
+                    reportLogo.style.display = 'block';
+                } else {
+                    reportLogo.style.display = 'none';
+                }
+            } else {
+                 reportSchoolName.textContent = 'โรงเรียนตัวอย่าง';
+                 reportLogo.style.display = 'none';
+            }
+
+            const classroomsSnapshot = await getDocs(collection(db, "classrooms"));
+            const startOfDay = Timestamp.fromDate(new Date(dateStr + "T00:00:00"));
+            const endOfDay = Timestamp.fromDate(new Date(dateStr + "T23:59:59"));
+            const attendanceQuery = query(collection(db, "Attendance"), where("date", ">=", startOfDay), where("date", "<=", endOfDay));
+            const attendanceSnapshot = await getDocs(attendanceQuery);
+            
+            const attendanceMap = new Map();
+            attendanceSnapshot.forEach(doc => {
+                attendanceMap.set(doc.data().classroom, doc.data());
+            });
+
+            let allClassroomsData = [];
+            classroomsSnapshot.forEach(doc => {
+                allClassroomsData.push({ id: doc.id, ...doc.data() });
+            });
+            // Simple sort by name
+            allClassroomsData.sort((a, b) => a.name.localeCompare(b.name));
+
+            reportBody.innerHTML = '';
+            
+            const totals = { totalMale: 0, totalFemale: 0, totalStudents: 0, presentMale: 0, presentFemale: 0, presentTotal: 0, absentMale: 0, absentFemale: 0, absentTotal: 0 };
+
+            for (const classroom of allClassroomsData) {
+                const totalMale = classroom.maleStudents || 0;
+                const totalFemale = classroom.femaleStudents || 0;
+                const totalStudents = totalMale + totalFemale;
+                
+                const attendanceData = attendanceMap.get(classroom.name);
+                const presentMale = attendanceData?.presentMale || 0;
+                const presentFemale = attendanceData?.presentFemale || 0;
+                const absentMale = attendanceData?.absentMale || 0;
+                const absentFemale = attendanceData?.absentFemale || 0;
+
+                const row = `
+                    <tr>
+                        <td class="class-name-cell">${classroom.name}</td>
+                        <td>${totalMale}</td>
+                        <td>${totalFemale}</td>
+                        <td>${totalStudents}</td>
+                        <td>${presentMale}</td>
+                        <td>${presentFemale}</td>
+                        <td>${presentMale + presentFemale}</td>
+                        <td>${absentMale}</td>
+                        <td>${absentFemale}</td>
+                        <td>${absentMale + absentFemale}</td>
+                        <td></td>
+                    </tr>
+                `;
+                reportBody.innerHTML += row;
+
+                totals.totalMale += totalMale;
+                totals.totalFemale += totalFemale;
+                totals.totalStudents += totalStudents;
+                totals.presentMale += presentMale;
+                totals.presentFemale += presentFemale;
+                totals.presentTotal += (presentMale + presentFemale);
+                totals.absentMale += absentMale;
+                totals.absentFemale += absentFemale;
+                totals.absentTotal += (absentMale + absentFemale);
+            }
+
+            const footerRow = `
+                <tr class="fw-bold">
+                    <td class="class-name-cell">รวมทั้งสิ้น</td>
+                    <td>${totals.totalMale}</td>
+                    <td>${totals.totalFemale}</td>
+                    <td>${totals.totalStudents}</td>
+                    <td>${totals.presentMale}</td>
+                    <td>${totals.presentFemale}</td>
+                    <td>${totals.presentTotal}</td>
+                    <td>${totals.absentMale}</td>
+                    <td>${totals.absentFemale}</td>
+                    <td>${totals.absentTotal}</td>
+                    <td></td>
+                </tr>
+            `;
+            reportFooter.innerHTML = footerRow;
+
+            const percentage = totals.totalStudents > 0 ? ((totals.presentTotal / totals.totalStudents) * 100).toFixed(2) : 0;
+            reportPercentage.textContent = `${percentage}%`;
+        }
+        // --- END: Report Page Logic ---
+
+        // --- START: School Settings Logic ---
+        async function loadSchoolSettingsPage() {
+            const schoolSettingsDoc = await getDoc(doc(db, "settings", "school-profile"));
+            if (schoolSettingsDoc.exists()) {
+                const settings = schoolSettingsDoc.data();
+                document.getElementById('school-name-input').value = settings.name || '';
+                document.getElementById('school-logo-url-input').value = settings.logoUrl || '';
+            }
+        }
+
+        document.getElementById('school-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const schoolName = document.getElementById('school-name-input').value;
+            const logoUrl = document.getElementById('school-logo-url-input').value;
+
+            try {
+                await setDoc(doc(db, "settings", "school-profile"), {
+                    name: schoolName,
+                    logoUrl: logoUrl
+                }, { merge: true });
+                showToast('สำเร็จ', 'บันทึกข้อมูลโรงเรียนเรียบร้อยแล้ว');
+            } catch (error) {
+                showToast('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+            }
+        });
+        // --- END: School Settings Logic ---
+
+    </script>
+</body>
+</html>
