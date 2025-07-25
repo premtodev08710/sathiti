@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกสถิติการเข้าเรียน</title>
 
-    <!-- Bootstrap 5 CSS & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Google Fonts: Kanit & Sarabun -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Custom CSS -->
     <style>
         :root {
             --primary-bg: #f5f7fb;
@@ -66,7 +63,7 @@
 
         /* --- Dashboard Layout --- */
         .dashboard-layout {
-            display: flex;
+            /* display: flex; <-- This line was removed to fix the bug */
             min-height: 100vh;
         }
 
@@ -244,7 +241,6 @@
 </head>
 <body>
 
-    <!-- ======== 1. Signup View ======== -->
     <div id="signup-view" class="view-container">
         <div class="auth-container p-3">
             <div class="card auth-card p-4">
@@ -275,7 +271,6 @@
         </div>
     </div>
 
-    <!-- ======== 2. Login View ======== -->
     <div id="login-view" class="view-container">
         <div class="auth-container p-3">
             <div class="card auth-card p-4">
@@ -304,9 +299,7 @@
     </div>
 
 
-    <!-- ======== 3. Dashboard View ======== -->
     <div id="dashboard-view" class="view-container dashboard-layout">
-        <!-- Sidebar Navigation -->
         <nav class="sidebar">
             <a href="#" class="logo"><i class="bi bi-journal-check"></i></a>
             <div class="flex-grow-1">
@@ -318,14 +311,12 @@
                 <a href="#" class="nav-link admin-only" id="nav-school" title="จัดการโรงเรียน"><i class="bi bi-building-fill-gear"></i><span class="nav-text">ตั้งค่าโรงเรียน</span></a>
             </div>
             <div>
-                 <a href="#" class="nav-link" id="nav-profile" title="ข้อมูลส่วนตัว"><i class="bi bi-person-circle"></i><span class="nav-text">โปรไฟล์</span></a>
-                 <a href="#" class="nav-link" id="logout-button" title="ออกจากระบบ"><i class="bi bi-box-arrow-right"></i><span class="nav-text">ออกจากระบบ</span></a>
+                <a href="#" class="nav-link" id="nav-profile" title="ข้อมูลส่วนตัว"><i class="bi bi-person-circle"></i><span class="nav-text">โปรไฟล์</span></a>
+                <a href="#" class="nav-link" id="logout-button" title="ออกจากระบบ"><i class="bi bi-box-arrow-right"></i><span class="nav-text">ออกจากระบบ</span></a>
             </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
             <header class="header">
                 <div>
                     <h2 id="page-title" class="fw-bold mb-0">แดชบอร์ด</h2>
@@ -336,9 +327,7 @@
                 </div>
             </header>
 
-            <!-- Page Content Area -->
             <div id="page-content-area">
-                <!-- Dashboard Content -->
                 <div id="dashboard-content" class="page">
                     <div id="admin-dashboard-filter" class="row mb-4 admin-only" style="display: none;">
                         <div class="col-md-4">
@@ -400,7 +389,6 @@
                     </div>
                 </div>
 
-                <!-- Attendance Content -->
                 <div id="attendance-content" class="page" style="display:none;">
                     <div class="widget-card">
                         <h5 class="mb-4">บันทึกข้อมูลการเข้าเรียน</h5>
@@ -416,7 +404,7 @@
                                     <div class="col-md-6 col-lg-8">
                                          <label class="form-label">ห้องเรียน</label>
                                          <div id="att-classroom-admin-view">
-                                            <select id="att-classroom" class="form-select" required></select>
+                                             <select id="att-classroom" class="form-select" required></select>
                                          </div>
                                          <div id="att-classroom-teacher-view" class="form-control-plaintext fs-5 fw-bold" style="display: none;"></div>
                                     </div>
@@ -448,13 +436,12 @@
                     </div>
                 </div>
                 
-                <!-- START: Report Content -->
                 <div id="report-content" class="page" style="display:none;">
                     <div class="widget-card">
                         <div id="print-button-container" class="d-flex justify-content-between align-items-center mb-4">
                             <div class="col-md-4">
-                               <label for="report-date-filter" class="form-label">เลือกวันที่สำหรับรายงาน</label>
-                               <input type="date" id="report-date-filter" class="form-control">
+                                <label for="report-date-filter" class="form-label">เลือกวันที่สำหรับรายงาน</label>
+                                <input type="date" id="report-date-filter" class="form-control">
                             </div>
                             <button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer-fill"></i> พิมพ์หน้านี้</button>
                         </div>
@@ -484,11 +471,9 @@
                                         </tr>
                                     </thead>
                                     <tbody id="report-table-body">
-                                        <!-- Report data is loaded here -->
-                                    </tbody>
+                                        </tbody>
                                     <tfoot id="report-table-footer">
-                                        <!-- Summary row is loaded here -->
-                                    </tfoot>
+                                        </tfoot>
                                 </table>
                             </div>
 
@@ -506,9 +491,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- END: Report Content -->
-                
-                <!-- START: Classroom Management Content -->
                 <div id="classrooms-content" class="page" style="display:none;">
                      <div class="row g-4">
                         <div class="col-lg-5 col-xl-4">
@@ -549,17 +531,13 @@
                                             </tr>
                                         </thead>
                                         <tbody id="classrooms-table-body">
-                                            <!-- Data is loaded here by JavaScript -->
-                                        </tbody>
+                                            </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- END: Classroom Management Content -->
-                
-                <!-- START: User Management Content -->
                 <div id="users-content" class="page" style="display:none;">
                     <div class="widget-card">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -577,15 +555,11 @@
                                     </tr>
                                 </thead>
                                 <tbody id="users-table-body">
-                                    <!-- User data loaded here -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <!-- END: User Management Content -->
-
-                <!-- START: School Management Content -->
                 <div id="school-content" class="page" style="display:none;">
                     <div class="widget-card">
                         <h5 class="mb-4">ตั้งค่าข้อมูลโรงเรียน</h5>
@@ -605,13 +579,10 @@
                         </form>
                     </div>
                 </div>
-                <!-- END: School Management Content -->
-
-            </div>
+                </div>
         </main>
     </div>
 
-    <!-- Toast Notification -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
         <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header text-white">
@@ -623,7 +594,6 @@
         </div>
     </div>
     
-    <!-- Confirmation Modal -->
     <div class="modal fade confirm-modal" id="confirmModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -640,7 +610,6 @@
         </div>
     </div>
 
-    <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -672,8 +641,7 @@
                         <div class="mb-3" id="new-user-classroom-container" style="display: none;">
                             <label for="new-user-classroom" class="form-label">มอบหมายห้องเรียนที่ปรึกษา (ถ้ามี)</label>
                             <select id="new-user-classroom" class="form-select">
-                                <!-- Classrooms loaded here -->
-                            </select>
+                                </select>
                         </div>
                     </form>
                 </div>
@@ -685,7 +653,6 @@
         </div>
     </div>
 
-    <!-- Assign Advisor Modal -->
     <div class="modal fade" id="assignAdvisorModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -697,8 +664,7 @@
                     <p>เลือกครูที่ปรึกษาสำหรับห้อง <strong id="assign-advisor-classroom-name"></strong></p>
                     <input type="hidden" id="assign-advisor-classroom-id">
                     <select id="assign-advisor-teacher-select" class="form-select">
-                        <!-- Teacher list loaded here -->
-                    </select>
+                        </select>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -708,7 +674,6 @@
         </div>
     </div>
 
-    <!-- Edit Classroom Modal -->
     <div class="modal fade" id="editClassroomModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -744,27 +709,23 @@
     </div>
 
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jsPDF for PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         // =================================================================
         //  1. FIREBASE CONFIG & INITIALIZATION
         // =================================================================
         const firebaseConfig = {
-            apiKey: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            authDomain: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            projectId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            storageBucket: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            messagingSenderId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            appId: "", //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
-            measurementId: "" //ปรับแก้ส่วนนี้ นำโค้ดมาจากfirebase
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: "",
+            measurementId: ""
         };
 
         // Import Firebase functions
